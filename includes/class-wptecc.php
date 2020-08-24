@@ -73,9 +73,12 @@ class WPTECC {
 	 */
 	public function init() {
 
-		add_shortcode( 'WPTECC_CURRENCY_SELECTOR', function() {
-			return wptecc_get_currency_selector();
-		} );
+		add_shortcode(
+			'WPTECC_CURRENCY_SELECTOR',
+			function() {
+				return wptecc_get_currency_selector();
+			}
+		);
 
 		add_filter(
 			'wpte_get_global_extensions_tab',
@@ -148,10 +151,16 @@ class WPTECC {
 			'get_post_metadata',
 			function( $value, $object_id, $meta_key, $single ) {
 
+				if ( $this->is_disabled() ) {
+					return $value;
+				}
+
 				if ( ! in_array(
 					$meta_key,
 					array(
-						'wp_travel_engine_setting', // Maybe other comes.
+						'wp_travel_engine_setting',
+						'wp_travel_engine_setting_trip_price',
+						'wp_travel_engine_setting_trip_prev_price',
 					),
 					true
 				) ) {
@@ -202,7 +211,9 @@ class WPTECC {
 								$meta_cache_value[0]['trip_prev_price'] = $this->get_converted_price( (float) $meta_cache_value[0]['trip_prev_price'] );
 							}
 							break;
-						default:
+						case 'wp_travel_engine_setting_trip_price':
+						case 'wp_travel_engine_setting_trip_prev_price':
+							$meta_cache_value = $this->get_converted_price( (float) $meta_cache_value );
 							break;
 					}
 
@@ -219,10 +230,14 @@ class WPTECC {
 		add_filter(
 			'wte_cart_items',
 			function( $items ) {
+				if ( $this->is_disabled() ) {
+					return $items;
+				}
+				global $wte_cart;
 				if ( is_array( $items ) ) {
 					return array_map(
-						function( $item ) {
-							$currency = isset( $item['currency'] ) ? $item['currency'] : null;
+						function( $item ) use ($wte_cart) {
+							$currency = $wte_cart->get_attribute( 'cart_currency' ) ? $wte_cart->get_attribute( 'cart_currency' ) : null;
 							if ( isset( $item['trip_price'] ) ) {
 								$item['trip_price'] = $this->get_converted_price( (float) $item['trip_price'], $currency );
 							}
@@ -246,7 +261,7 @@ class WPTECC {
 					global $wte_cart;
 					$items    = $wte_cart->getItems();
 					$item     = array_shift( $items );
-					$currency = isset( $item['currency'] ) ? $item['currency'] : null;
+					$currency = $wte_cart->get_attribute( 'cart_currency' ) ? $wte_cart->get_attribute( 'cart_currency' ) : null;
 					return array_map(
 						function( $total ) use ( $currency ) {
 							return number_format( $this->get_converted_price( $total, $currency ), 2 );
@@ -254,18 +269,32 @@ class WPTECC {
 						$totals
 					);
 				}
+				return $totals;
 			}
 		);
 
-		add_filter(
-			'wp_travel_engine_cart_attributes',
-			function( $attrs ) {
-				if ( isset( $_COOKIE['wptecc-user-currency'] ) ) {
-					$attrs['currency'] = wp_unslash( $_COOKIE['wptecc-user-currency'] );
+		// Adds an attribute to cart.
+		add_action(
+			'wp_travel_engine_after_trip_add_to_cart',
+			function( $trip_id ) {
+				if ( $this->is_disabled() ) {
+					return;
 				}
-				return $attrs;
+				global $wte_cart;
+
+				if ( isset( $_COOKIE['wptecc-user-currency'] ) ) {
+					$currency = wp_unslash( $_COOKIE['wptecc-user-currency'] );
+				} else {
+					$settings = get_option( 'wp_travel_engine_settings', false );
+					if ( is_array( $settings ) && isset( $settings['currency_code'] ) ) {
+						$currency = $settings['currency_code'];
+					}
+				}
+
+				$wte_cart->set_attribute( 'cart_currency', $currency );
 			}
 		);
+
 	}
 
 	public function purge_cache() {
