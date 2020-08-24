@@ -25,7 +25,10 @@ function wptecc_get_currency_selector() {
 	wp_enqueue_script( 'wptecc-view' );
 	$settings      = get_option( 'wp_travel_engine_settings', true );
 	$base_currency = $settings['currency_code'];
-	$currencies    = isset( $settings['currency_convertor']['conversion_currencies'] ) ? $settings['currency_convertor']['conversion_currencies'] : array();
+	$currencies    = ! empty( $settings['currency_convertor']['conversion_currencies'] ) ? $settings['currency_convertor']['conversion_currencies'] : array();
+	if ( empty( $currencies ) ) {
+		return '';
+	}
 	ob_start();
 	array_unshift( $currencies, $base_currency );
 	ob_start();

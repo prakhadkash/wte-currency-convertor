@@ -124,7 +124,7 @@ class WPTECC {
 				}
 				$settings          = get_option( 'wp_travel_engine_settings', true );
 				$display_locations = isset( $settings['currency_convertor']['menu_locations'] ) && is_array( $settings['currency_convertor']['menu_locations'] ) ? $settings['currency_convertor']['menu_locations'] : array();
-				if ( ! in_array( $args->theme_location, $display_locations, true ) ) {
+				if ( ! in_array( $args->theme_location, $display_locations, true ) || empty( $settings['currency_convertor']['conversion_currencies'] ) ) {
 					return $items;
 				}
 				$content = wptecc_get_currency_selector();
