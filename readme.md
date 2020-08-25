@@ -1,4 +1,4 @@
-# WP Travel Engine Currency Convertor - A Test Project
+# WP Travel Engine Currency Convertor - A Test Project | [Download Plugin](https://github.com/prakhadkash/wte-currency-convertor/raw/master/build/wpte-currency-convertor.zip)
 Supports: WP Travel Engine `4.1.0`
 
 This is an addon which provides multiple currency functionality for WP Travel Engine, built using [Fixer API](https://fixer.io/). It works with both free and premium subscription of Fixer. Get FIXER API KEY [here](https://fixer.io/product).
