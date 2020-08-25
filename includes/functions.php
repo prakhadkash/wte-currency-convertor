@@ -24,7 +24,7 @@ function wptecc_get_theme_locations() {
 function wptecc_get_currency_selector() {
 	wp_enqueue_script( 'wptecc-view' );
 	$settings      = get_option( 'wp_travel_engine_settings', true );
-	$base_currency = $settings['currency_code'];
+	$base_currency = isset( $settings['currency_code'] ) ? $settings['currency_code'] : 'USD';
 	$currencies    = ! empty( $settings['currency_convertor']['conversion_currencies'] ) ? $settings['currency_convertor']['conversion_currencies'] : array();
 	if ( empty( $currencies ) ) {
 		return '';

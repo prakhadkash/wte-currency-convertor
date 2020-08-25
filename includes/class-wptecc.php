@@ -143,6 +143,15 @@ class WPTECC {
 				if ( $this->is_disabled() ) {
 					return $code;
 				}
+				if ( is_admin() ) {
+					global $post;
+					$screen = get_current_screen();
+					if ( isset( $screen->id ) && 'booking' === $screen->id ) {
+						$cart_currency = get_post_meta( $post->ID, 'wp_travel_engine_booking_setting' );
+						return is_array( $cart_currency[0] ) && empty( $cart_currency[0]['cart_currency'] ) ? $code : $cart_currency[0]['cart_currency'];
+					}
+					return $code;
+				}
 				return wtecc_get_active_currency( $code );
 			}
 		);
@@ -236,7 +245,7 @@ class WPTECC {
 				global $wte_cart;
 				if ( is_array( $items ) ) {
 					return array_map(
-						function( $item ) use ($wte_cart) {
+						function( $item ) use ( $wte_cart ) {
 							$currency = $wte_cart->get_attribute( 'cart_currency' ) ? $wte_cart->get_attribute( 'cart_currency' ) : null;
 							if ( isset( $item['trip_price'] ) ) {
 								$item['trip_price'] = $this->get_converted_price( (float) $item['trip_price'], $currency );
@@ -293,6 +302,20 @@ class WPTECC {
 
 				$wte_cart->set_attribute( 'cart_currency', $currency );
 			}
+		);
+
+		add_filter(
+			'wte_before_booking_meta_save',
+			function( $order_metas, $booking_id ) {
+				global $wte_cart;
+				$cart_currency = $wte_cart->get_attribute( 'cart_currency' );
+				if ( $cart_currency ) {
+					$order_metas['cart_currency'] = $cart_currency;
+				}
+				return $order_metas;
+			},
+			11,
+			2
 		);
 
 	}

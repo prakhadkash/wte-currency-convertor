@@ -31,7 +31,7 @@ const wpteccCookie = {
         if (el.tagName.toLowerCase() === 'select') {
             el.addEventListener('change', handleCurrencySelection(true))
         } else {
-            el.addEventListener('click', handleCurrencySelection())
+            el.addEventListener('click', handleCurrencySelection()) // Useful other elements except select.
         }
     })
 })()

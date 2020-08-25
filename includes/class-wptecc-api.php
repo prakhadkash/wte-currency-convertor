@@ -1,6 +1,6 @@
 <?php
 /**
- * Class WPTECC
+ * Class WPTECC_FIXER_API
  */
 
 class WPTECC_FIXER_API {

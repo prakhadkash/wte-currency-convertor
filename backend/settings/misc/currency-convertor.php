@@ -5,11 +5,11 @@
 
 $settings              = get_option( 'wp_travel_engine_settings', true );
 $enable                = isset( $settings['currency_convertor']['enable'] ) ? $settings['currency_convertor']['enable'] : 'no';
-$conversion_currencies = isset( $settings['currency_convertor']['conversion_currencies'] ) ? $settings['currency_convertor']['conversion_currencies'] : array();
+$conversion_currencies = isset( $settings['currency_convertor']['conversion_currencies'] ) && is_array( $settings['currency_convertor']['conversion_currencies'] ) ? $settings['currency_convertor']['conversion_currencies'] : array();
 $fixer_api_key         = isset( $settings['fixer_api_key'] ) ? $settings['fixer_api_key'] : '';
 $display_option        = empty( $fixer_api_key ) ? ' style="display:none;" ' : '';
 $base_currency         = isset( $settings['currency_code'] ) ? $settings['currency_code'] : 'USD';
-$menu_locations        = isset( $settings['currency_convertor']['menu_locations'] ) ? $settings['currency_convertor']['menu_locations'] : array();
+$menu_locations        = isset( $settings['currency_convertor']['menu_locations'] ) && is_array( $settings['currency_convertor']['menu_locations'] ) ? $settings['currency_convertor']['menu_locations'] : array();
 $auto_update_duration  = isset( $settings['currency_convertor']['auto_update_duration'] ) ? $settings['currency_convertor']['auto_update_duration'] : 4;
 
 $obj        = new \Wp_Travel_Engine_Functions();
@@ -50,7 +50,7 @@ $currencies = $obj->wp_travel_engine_currencies();
 			<div class="wpte-field wpte-floated">
 				<label class="wpte-field-label" for="wp_travel_engine_settings__auto_update_duration"><?php _e( 'Refresh Rates (in Hrs)', 'wptecc' ); ?>
 				</label>
-				<input type="number" step="0.1" name="wp_travel_engine_settings['currency_convertor][auto_update_duration]" id="wp_travel_engine_settings__auto_update_duration" min="0" value="<?php echo esc_attr( $auto_update_duration ); ?>">
+				<input type="number" step="0.1" name="wp_travel_engine_settings[currency_convertor][auto_update_duration]" id="wp_travel_engine_settings__auto_update_duration" min="0" value="<?php echo esc_attr( $auto_update_duration ); ?>">
 				<span class="wpte-tooltip"> <?php echo sprintf( wp_kses_post( 'It is the duration (in Hrs) the exchange rates data will be cached for. "0" will fetch data every time.', 'wptecc' ) ); ?> <a href="" id="wptecc-purge" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wptecc_purge_nonce' ) ); ?>"><?php esc_html_e( 'Purge Cache.', 'wptecc' ); ?></a></span>
 			</div>
 			<div class="wpte-field wpte-floated wptecc-option" <?php echo $display_option; ?>>
