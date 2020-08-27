@@ -1,10 +1,11 @@
 {
-  "scripts" : {
-    "start" : "npx babel --watch assets/js/src --out-dir assets/js"
+  "scripts": {
+    "start": "npx babel --watch assets/js/src --out-dir assets/js"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
     "@babel/core": "^7.11.4",
     "@babel/preset-env": "^7.11.0"
-  }
+  },
+  "dependencies": {}
 }

@@ -1,31 +1,80 @@
 <?php
 /**
  * Class WPTECC_FIXER_API
+ *
+ * @package wptecc
  */
 
+/**
+ * Class for FIXER API.
+ */
 class WPTECC_FIXER_API {
 
+	/**
+	 * API Access Key.
+	 *
+	 * @var string
+	 */
 	protected $access_key;
 
+	/**
+	 * Is premium Subscription.
+	 *
+	 * @var bool
+	 */
 	public $is_premium;
 
+	/**
+	 * Base URL API Endpoint.
+	 *
+	 * @var string
+	 */
 	public $base_url = 'data.fixer.io/api/';
 
+	/**
+	 * Base Currency of response.
+	 *
+	 * @var string
+	 */
 	public $base;
 
+	/**
+	 * API Response.
+	 *
+	 * @var object
+	 */
 	public $response;
 
-	private $rates;
-
+	/**
+	 * Class Singleton instance.
+	 *
+	 * @var object WPTECC_FIXER_API
+	 */
 	protected static $instance = null;
 
+	/**
+	 * Active Error Type.
+	 *
+	 * @var string
+	 */
 	public $error_type;
 
+	/**
+	 * Class Constructor.
+	 *
+	 * @param string $access_key Access Key.
+	 */
 	public function __construct( $access_key ) {
 		$this->access_key = $access_key;
 		$this->validate();
 	}
 
+	/**
+	 * Gets Class active instance.
+	 *
+	 * @param string $access_key Access key.
+	 * @return object WPTECC_FIXER_API
+	 */
 	public static function instance( $access_key ) {
 		if ( is_null( self::$instance ) ) {
 			self::$instance = new self( $access_key );
@@ -33,6 +82,12 @@ class WPTECC_FIXER_API {
 		return self::$instance;
 	}
 
+	/**
+	 * Generates Endpoint URL.
+	 *
+	 * @param boolean $is_premium if is premium.
+	 * @return string Endpoint.
+	 */
 	public function get_endpoint( $is_premium = false ) {
 		if ( $is_premium ) {
 			return 'https://' . $this->base_url;
@@ -41,6 +96,13 @@ class WPTECC_FIXER_API {
 		}
 	}
 
+	/**
+	 * Requests are made from here.
+	 *
+	 * @param boolean $is_premium Is premium.
+	 * @param string  $base Base Currency.
+	 * @return void|object
+	 */
 	public function request( $is_premium = false, $base = null ) {
 		if ( ! function_exists( 'curl_init' ) ) {
 			return;
@@ -52,8 +114,8 @@ class WPTECC_FIXER_API {
 			$endpoint .= "&base={$base}";
 		}
 
-		$endpoint .= "&format=1";
-
+		$endpoint .= '&format=1';
+		// phpcs:disable
 		$curl = curl_init();
 		curl_setopt_array(
 			$curl,
@@ -72,10 +134,17 @@ class WPTECC_FIXER_API {
 		$response = curl_exec( $curl );
 
 		curl_close( $curl );
+		//phpcs:enable
 
 		return json_decode( $response );
 	}
 
+	/**
+	 * Gets Rates.
+	 *
+	 * @param string $base Currency code.
+	 * @return void
+	 */
 	public function get( $base = null ) {
 		$data = $this->request( $this->is_premium, $base );
 
@@ -88,6 +157,11 @@ class WPTECC_FIXER_API {
 		}
 	}
 
+	/**
+	 * Validates and Checks subscription type.
+	 *
+	 * @return void
+	 */
 	public function validate() {
 		$data = $this->request( true );
 
@@ -100,27 +174,38 @@ class WPTECC_FIXER_API {
 		$this->get();
 	}
 
+	/**
+	 * Getter to get rates from outside.
+	 *
+	 * @return object
+	 */
 	public function get_rates() {
 		return $this->response->rates;
 	}
 
-	public function get_rate( $from = 'EUR', $to = 'EUR' ) {
-		if ( $this->base === $from ) {
-			return $this->response->rates->{$to};
-		}
-
-		// For free subscription.
-		return $this->response->rates->{$to} / $this->response->rates->{$from};
-	}
-
+	/**
+	 * Getter to get error type.
+	 *
+	 * @return string Error Type.
+	 */
 	public function get_error_type() {
 		return $this->error_type;
 	}
 
+	/**
+	 * Checks if has Error.
+	 *
+	 * @return boolean
+	 */
 	public function has_error() {
 		return isset( $this->response->success ) && ! $this->response->success;
 	}
 
+	/**
+	 * Getter to last Response.
+	 *
+	 * @return object The Last Response.
+	 */
 	public function get_response() {
 		return $this->response;
 	}

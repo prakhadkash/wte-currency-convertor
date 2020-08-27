@@ -2,32 +2,39 @@
 /**
  * WPTECC
  *
- * @package wpte-currency-convertor
+ * @package wptecc
  */
 
+/**
+ * The Main Class
+ */
 class WPTECC {
 	/**+
 	 * Plugin Version.
+	 *
+	 * @var string Version.
 	 */
 	public $version = '1.0.0';
 
 	/**
 	 * Only instance for the class.
+	 *
+	 * @var object WPTECC.
 	 */
-	protected static $_instance = null;
+	protected static $instance = null;
 
 	/**
 	 * Plugins instance.
 	 *
 	 * Provides single instance of the class.
 	 *
-	 * @return WPTECC
+	 * @return object WPTECC
 	 */
 	public static function instance() {
-		if ( is_null( self::$_instance ) ) {
-			self::$_instance = new self();
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self();
 		}
-		return self::$_instance;
+		return self::$instance;
 	}
 
 	/**
@@ -45,7 +52,7 @@ class WPTECC {
 	 * @return void
 	 */
 	private function includes() {
-		require_once 'class-wptecc-api.php';
+		require_once 'class-wptecc-fixer-api.php';
 		require_once 'functions.php';
 	}
 
@@ -58,6 +65,11 @@ class WPTECC {
 		add_action( 'init', array( $this, 'init' ) );
 	}
 
+	/**
+	 * Define constants.
+	 *
+	 * @return void
+	 */
 	private function define_constants() {
 		$settings = get_option( 'wp_travel_engine_settings', true );
 		if ( ! defined( 'WPTECC_API_FIXER_KEY' ) ) {
@@ -73,6 +85,9 @@ class WPTECC {
 	 */
 	public function init() {
 
+		/**
+		 * Shortcode hook for currency Selector.
+		 */
 		add_shortcode(
 			'WPTECC_CURRENCY_SELECTOR',
 			function() {
@@ -80,6 +95,9 @@ class WPTECC {
 			}
 		);
 
+		/**
+		 * Adds tab content.
+		 */
 		add_filter(
 			'wpte_get_global_extensions_tab',
 			function( $tabs ) {
@@ -96,6 +114,9 @@ class WPTECC {
 			}
 		);
 
+		/**
+		 * Update options with data.
+		 */
 		add_action(
 			'wpte_after_save_global_settings_data',
 			function( $post_data ) {
@@ -116,6 +137,9 @@ class WPTECC {
 		add_action( 'wp_ajax_wtecc_purge', array( $this, 'purge_cache' ) );
 		add_action( 'wp_ajax_nopriv_wtecc_purge', array( $this, 'purge_cache' ) );
 
+		/**
+		 * Filters Menus to add selectors.
+		 */
 		add_filter(
 			'wp_nav_menu_items',
 			function( $items, $args ) {
@@ -135,8 +159,15 @@ class WPTECC {
 			2
 		);
 
+		/**
+		 * Enqueues Scripts hooks.
+		 */
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
+		/**
+		 * Currency Code Filter.
+		 */
 		add_filter(
 			'wp_travel_engine_currency_code',
 			function( $code ) {
@@ -156,6 +187,9 @@ class WPTECC {
 			}
 		);
 
+		/**
+		 * Filters Post Meta data.
+		 */
 		add_filter(
 			'get_post_metadata',
 			function( $value, $object_id, $meta_key, $single ) {
@@ -236,6 +270,9 @@ class WPTECC {
 			4
 		);
 
+		/**
+		 * Filters Cart Items.
+		 */
 		add_filter(
 			'wte_cart_items',
 			function( $items ) {
@@ -263,6 +300,9 @@ class WPTECC {
 			}
 		);
 
+		/**
+		 * Filters Carts Totals.
+		 */
 		add_filter(
 			'wp_travel_engine_cart_get_total_fields',
 			function( $totals ) {
@@ -273,7 +313,7 @@ class WPTECC {
 					$currency = $wte_cart->get_attribute( 'cart_currency' ) ? $wte_cart->get_attribute( 'cart_currency' ) : null;
 					return array_map(
 						function( $total ) use ( $currency ) {
-							return number_format( $this->get_converted_price( $total, $currency ), 2 );
+							return $this->get_converted_price( $total, $currency );
 						},
 						$totals
 					);
@@ -292,6 +332,7 @@ class WPTECC {
 				global $wte_cart;
 
 				if ( isset( $_COOKIE['wptecc-user-currency'] ) ) {
+					// phpcs:ignore
 					$currency = wp_unslash( $_COOKIE['wptecc-user-currency'] );
 				} else {
 					$settings = get_option( 'wp_travel_engine_settings', false );
@@ -304,6 +345,9 @@ class WPTECC {
 			}
 		);
 
+		/**
+		 * Filters to save additonal meta fields.
+		 */
 		add_filter(
 			'wte_before_booking_meta_save',
 			function( $order_metas, $booking_id ) {
@@ -320,8 +364,13 @@ class WPTECC {
 
 	}
 
+	/**
+	 * Purge cache data when requested.
+	 *
+	 * @return void
+	 */
 	public function purge_cache() {
-		if ( isset( $_GET['_nonce'] ) && wp_verify_nonce( wp_unslash( $_GET['_nonce'] ), 'wptecc_purge_nonce' ) ) {
+		if ( isset( $_GET['_nonce'] ) && wp_verify_nonce( wp_unslash( $_GET['_nonce'] ), 'wptecc_purge_nonce' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			if ( delete_transient( 'wptecc_fixer_response' ) ) {
 				wp_send_json_success( array( 'message' => __( 'Data Purged Successfully.', 'wptecc' ) ) );
 				wp_die();
@@ -331,15 +380,32 @@ class WPTECC {
 		wp_die();
 	}
 
+	/**
+	 * Checks if currency convertor is disabled.
+	 *
+	 * @return boolean
+	 */
 	private function is_disabled() {
 		return ! $this->is_enabled();
 	}
 
+	/**
+	 * Checks if currency convertor is enabled.
+	 *
+	 * @return boolean
+	 */
 	private function is_enabled() {
 		$settings = get_option( 'wp_travel_engine_settings', true );
 		return isset( $settings['currency_convertor']['enable'] ) && 'yes' === $settings['currency_convertor']['enable'];
 	}
 
+	/**
+	 * Gets Converted Price.
+	 *
+	 * @param float  $amount Amount to convert.
+	 * @param string $base_currency Base Currency.
+	 * @return float Converted amount.
+	 */
 	private function get_converted_price( float $amount, $base_currency = null ) {
 		if ( class_exists( 'Wte_Trip_Currency_Converter_Init' ) || is_admin() ) { // Don't want to mess with original convertor.
 			return $amount;
@@ -363,10 +429,23 @@ class WPTECC {
 
 	}
 
+	/**
+	 * Enqueues Scripts from here.
+	 *
+	 * @return void
+	 */
 	public function enqueue_scripts() {
-		wp_register_script( 'wptecc-view', plugin_dir_url( WPTECC_FILE ) . 'assets/js/view.js', array(), rand(), true );
+		if ( is_admin() ) {
+			wp_enqueue_script( 'wptecc', plugin_dir_url( WPTECC_FILE ) . 'assets/js/admin.js', array(), wp_rand(), true );
+		}
+		wp_register_script( 'wptecc-view', plugin_dir_url( WPTECC_FILE ) . 'assets/js/view.js', array(), wp_rand(), true );
 	}
 
+	/**
+	 * Validate the request.
+	 *
+	 * @return void
+	 */
 	public function validate_access_key() {
 		// phpcs:ignore
 		$access_key = $_GET['access_key'];

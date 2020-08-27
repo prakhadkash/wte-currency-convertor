@@ -1,6 +1,8 @@
 <?php
 /**
  * Helper Functions for the plugin.
+ *
+ * @package wptecc
  */
 
 /**
@@ -21,6 +23,11 @@ function wptecc_get_theme_locations() {
 	return $locations;
 }
 
+/**
+ * Currency Selector HTML
+ *
+ * @return string HTML Content.
+ */
 function wptecc_get_currency_selector() {
 	wp_enqueue_script( 'wptecc-view' );
 	$settings      = get_option( 'wp_travel_engine_settings', true );
@@ -37,7 +44,7 @@ function wptecc_get_currency_selector() {
 		<select name="convert_to" id="wptecc_convertto" data-wpte-currency="">
 			<?php
 			foreach ( $currencies as $currency ) {
-				$current_currency = isset( $_COOKIE['wptecc-user-currency'] ) ? $_COOKIE['wptecc-user-currency'] : $base_currency;
+				$current_currency = isset( $_COOKIE['wptecc-user-currency'] ) ? wp_unslash( $_COOKIE['wptecc-user-currency'] ) : $base_currency; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$selected         = selected( $currency, $current_currency, false );
 				echo wp_kses(
 					"<option value=\"{$currency}\" {$selected}>{$currency}</option>",
@@ -59,14 +66,27 @@ function wptecc_get_currency_selector() {
 	return ob_get_clean();
 }
 
+/**
+ * Look for the currently active currency if any.
+ *
+ * @param string $default Currency Code.
+ * @return string Currency Code.
+ */
 function wtecc_get_active_currency( $default = 'USD' ) {
 	if ( isset( $_COOKIE['wptecc-user-currency'] ) ) {
-		return wp_unslash( $_COOKIE['wptecc-user-currency'] );
+		return wp_unslash( $_COOKIE['wptecc-user-currency'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 	$settings = get_option( 'wp_travel_engine_settings', true );
 	return isset( $settings['currency_code'] ) ? $settings['currency_code'] : $default;
 }
 
+/**
+ * Generates and returns currency conversion rate.
+ *
+ * @param string $from Currency to convert from.
+ * @param string $to Currency to convert to.
+ * @return number Conversion rate.
+ */
 function wtecc_get_conversion_rate( $from, $to ) {
 	$settings         = get_option( 'wp_travel_engine_settings', true );
 	$refresh_duration = 4 * 60 * 60;
@@ -103,6 +123,14 @@ function wtecc_get_conversion_rate( $from, $to ) {
 	return $response->rates->{$to} / $response->rates->{$from};
 }
 
+/**
+ * Convert the amount from one currency to other.
+ *
+ * @param float  $amount Amount to be converted.
+ * @param string $base_currency Base Currency.
+ * @param string $active_currency Active Currency.
+ * @return number converted amount.
+ */
 function wtecc_get_converted_price( $amount, $base_currency = null, $active_currency = null ) {
 	if ( is_null( $base_currency ) ) {
 		$settings      = get_option( 'wp_travel_engine_settings', true );
@@ -114,5 +142,5 @@ function wtecc_get_converted_price( $amount, $base_currency = null, $active_curr
 
 	$rate = wtecc_get_conversion_rate( $base_currency, $active_currency );
 
-	return (float) number_format( $amount * $rate, 2 );
+	return $amount * $rate;
 }
