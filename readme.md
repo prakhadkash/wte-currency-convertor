@@ -1,11 +1,11 @@
-# WP Travel Engine Currency Convertor - A Test Project
+# WP Travel Engine Currency Convertor - A Test Project | [Download Plugin](https://github.com/prakhadkash/wte-currency-convertor/raw/master/build/wpte-currency-convertor.zip)
 Supports: WP Travel Engine `4.1.0`
 
 This is an addon which provides multiple currency functionality for WP Travel Engine, built using [Fixer API](https://fixer.io/). It works with both free and premium subscription of Fixer. Get FIXER API KEY [here](https://fixer.io/product).
 
 ## Recommended
 This addon requires a filter hook to work correctly on `cart` and `checkout` page which is not present on current version `4.1.0` of WP Travel Engine.
-- Either download the modified version of WP Travel Engine from [here](https://github.com/prakhadkash/wte-currency-convertor/raw/master/build/wpte-currency-convertor.zip)
+- Either download the modified version of WP Travel Engine from [here](https://github.com/prakhadkash/wte-currency-convertor/raw/master/build/wp-travel-engine.zip)
 - or replace the `WTE_Cart::getItems` method with the function below.
 ```php
 	public function getItems() {
